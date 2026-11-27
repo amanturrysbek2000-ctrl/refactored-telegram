@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кибербуллинг: Интерактивный тест</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, rgba(56,189,248,0.14) 0%, rgba(15,23,42,0) 70%);
+            border-radius: 50%;
+            top: -150px;
+            left: -150px;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatGlow 10s infinite alternate ease-in-out;
+        }
+
+        .bg-glow-2 {
+            position: fixed;
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, rgba(244,63,94,0.14) 0%, rgba(15,23,42,0) 70%);
+            border-radius: 50%;
+            bottom: -150px;
+            right: -150px;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatGlow 10s infinite alternate-reverse ease-in-out;
+        }
+
+        @keyframes floatGlow {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(40px, 40px) scale(1.15); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1150px;
+            margin: 0 auto;
+            padding: 25px 20px;
+        }
+
+        /* Экран доски */
+        .board-header {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 22px 28px;
+            box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.5);
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .qr-box {
+            background: #ffffff;
+            padding: 10px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
+            flex-shrink: 0;
+        }
+
+        .qr-box img {
+            width: 135px;
+            height: 135px;
+            display: block;
+        }
+
+        .board-controls-area {
+            flex: 1;
+            min-width: 260px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #38bdf8;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .board-title {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 14px;
+            line-height: 1.2;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 0.98rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: #38bdf8;
+            color: #0f172a;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: rgba(244, 63, 94, 0.15);
+            color: #f43f5e;
+            border-color: rgba(244, 63, 94, 0.5);
+        }
+
+        .btn-danger:hover {
+            background: #f43f5e;
+            color: #ffffff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #38bdf8, #6366f1);
+            color: #ffffff;
+            border: none;
+            font-size: 1.1rem;
+            padding: 14px 28px;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.92;
+            color: #ffffff;
+        }
+
+        /* Рейтинг участников */
+        .leaderboard-panel {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 25px 28px;
+            box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 12px;
+        }
+
+        .leaderboard-header h2 {
+            font-size: 1.4rem;
+            color: #e2e8f0;
+        }
+
+        .count-pill {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            padding: 4px 12px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 45px 20px;
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .result-card {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px 20px;
+            animation: slideIn 0.4s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .student-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #f8fafc;
+        }
+
+        .rank-badge {
+            background: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+        }
+
+        .score-text {
+            color: #10b981;
+            font-size: 1.2rem;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 999px;
+            transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Экран прохождения теста на телефоне */
+        .student-card {
+            max-width: 680px;
+            margin: 20px auto;
+            background: rgba(30, 41, 59, 0.82);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 32px 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        }
+
+        .student-card h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .student-card p {
+            color: #cbd5e1;
+            font-size: 1.08rem;
+            line-height: 1.5;
+            margin-bottom: 22px;
+        }
+
+        .name-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 14px;
+            padding: 15px 18px;
+            color: #ffffff;
+            font-size: 1.15rem;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .name-input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+        }
+
+        .question-text {
+            font-size: 1.32rem;
+            font-weight: 700;
+            color: #f8fafc;
+            line-height: 1.45;
+            margin-bottom: 22px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .option-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            text-align: left;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 14px 18px;
+            color: #e2e8f0;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .option-btn.selected {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.22);
+            color: #ffffff;
+        }
+
+        .option-letter {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .option-btn.selected .option-letter {
+            background: #38bdf8;
+            color: #0f172a;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .final-score-box {
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        .big-score {
+            font-size: 3.4rem;
+            font-weight: 800;
+            color: #10b981;
+            margin: 12px 0;
+        }
+
+        @media (max-width: 650px) {
+            .board-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .qr-box img {
+                width: 120px;
+                height: 120px;
+            }
+            .board-title {
+                font-size: 1.55rem;
+            }
+            .student-card {
+                padding: 24px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
+
+    <!-- ЭКРАН ИНТЕРАКТИВНОЙ ДОСКИ -->
+    <div id="boardView" class="container">
+        <div class="board-header">
+            <div class="qr-box">
+                <img id="qrImage" src="" alt="QR-код теста">
+            </div>
+            <div class="board-controls-area">
+                <div class="badge" id="roomBadge">🛡️ Комната #1001</div>
+                <div class="board-title">Кибербуллинг: Проверка знаний</div>
+                <div class="action-buttons">
+                    <button class="btn" onclick="createNewRoom()">➕ Новая комната</button>
+                    <button class="btn btn-danger" onclick="clearResults()">🗑️ Очистить</button>
+                    <a id="openHereLink" href="#" target="_blank" class="btn">📱 Открыть тест здесь</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="leaderboard-panel">
+            <div class="leaderboard-header">
+                <h2>🏆 Результаты участников</h2>
+                <span class="count-pill" id="participantsCount">Участников: 0</span>
+            </div>
+            <div id="resultsList" class="results-list">
+                <div class="empty-state">
+                    Отсканируйте QR-код с телефона, введите имя и пройдите 15 вопросов — результаты сразу появятся здесь!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН УЧЕНИКА (ТЕСТ) -->
+    <div id="studentView" class="container hidden">
+        <!-- Шаг 1: Ввод имени -->
+        <div id="nameStep" class="student-card">
+            <div class="badge">🛡️ Тест • 15 вопросов</div>
+            <h1>Кибербуллинг</h1>
+            <p>Введи своё имя, чтобы начать тест. После ответа на все 15 вопросов нажми «Готово», и твой результат сразу появится на доске.</p>
+            <input type="text" id="studentNameInput" class="name-input" placeholder="Например: Амир" maxlength="30">
+            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="startQuiz()">🚀 Начать тест</button>
+        </div>
+
+        <!-- Шаг 2: Вопросы -->
+        <div id="quizStep" class="student-card hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <span class="badge" id="questionCounter">❓ Вопрос 1/15</span>
+                <span style="color: #94a3b8; font-weight: 600;" id="playerLabel"></span>
+            </div>
+            <div class="question-text" id="questionText"></div>
+            <div class="options-list" id="optionsList"></div>
+            <div style="display: flex; justify-content: space-between; gap: 12px;">
+                <button class="btn" id="prevQBtn" onclick="prevQuestion()">← Назад</button>
+                <button class="btn btn-primary" id="nextQBtn" onclick="nextQuestion()">Вперёд →</button>
+            </div>
+        </div>
+
+        <!-- Шаг 3: Итог -->
+        <div id="finishStep" class="student-card hidden">
+            <div class="final-score-box">
+                <div class="badge">✅ Результат отправлен на доску</div>
+                <h1 id="finishName">Отлично!</h1>
+                <div class="big-score" id="finalScoreText">0 / 15</div>
+                <p id="finishPercent">Твой результат сохранён и отображается в общем рейтинге на экране доски.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const QUESTIONS = [
+            {
+                q: "Что такое доксинг (doxxing) в контексте кибербуллинга?",
+                options: [
+                    "Намеренный поиск и публикация личных данных человека (адреса, телефона, фото документов) без его согласия",
+                    "Автоматическая блокировка спам-сообщений алгоритмами социальной сети",
+                    "Временное удаление собственного аккаунта для защиты от хейтеров"
+                ],
+                correct: 0
+            },
+            {
+                q: "Чем флейминг (flaming) отличается от обычного спора в комментариях?",
+                options: [
+                    "Это конструктивная критика с приведением научных аргументов",
+                    "Это бурный обмен оскорблениями и агрессивными выпадами в публичном чате, часто не по теме",
+                    "Это жалоба модераторам на нарушение авторских прав"
+                ],
+                correct: 1
+            },
+            {
+                q: "Как называется вид травлевой атаки, когда агрессор создаёт фейковую страницу от имени жертвы и публикует от её лица провокационные посты?",
+                options: [
+                    "Имперсонация (выдача себя за другого)",
+                    "Фишинг",
+                    "Кликбейт"
+                ],
+                correct: 0
+            },
+            {
+                q: "Почему алгоритмы соцсетей усиливают кибербуллинг, если жертва начинает активно отвечать на каждый злой комментарий?",
+                options: [
+                    "Алгоритмы автоматически банят автора поста за частые ответы",
+                    "Большое количество комментариев и реакций воспринимается системой как высокая вовлечённость, и пост продвигается ещё большей аудитории",
+                    "Соцсеть скрывает ветку комментариев от всех подписчиков"
+                ],
+                correct: 1
+            },
+            {
+                q: "Что такое аутинг (outing) в цифровой среде?",
+                options: [
+                    "Публичное разглашение чужих личных тайн, интимных переписок или конфиденциальной информации без разрешения",
+                    "Выход из всех групповых чатов перед экзаменами",
+                    "Настройка двухфакторной аутентификации в мессенджере"
+                ],
+                correct: 0
+            },
+            {
+                q: "Какое действие является самым правильным при фиксации доказательств кибербуллинга?",
+                options: [
+                    "Удалить всю переписку и закрыть аккаунт, не сохраняя данные",
+                    "Сделать скриншоты сообщений так, чтобы были видны дата, время, никнейм/ID обидчика и ссылка на профиль",
+                    "Переслать угрозы в общий чат класса для обсуждения"
+                ],
+                correct: 1
+            },
+            {
+                q: "Что означает термин «киберсталкинг»?",
+                options: [
+                    "Навязчивое, постоянное преследование человека в сети, отслеживание его геолокации и запугивание",
+                    "Прохождение онлайн-игр в кооперативном режиме",
+                    "Сбор открытой статистики просмотров видеоролика"
+                ],
+                correct: 0
+            },
+            {
+                q: "Как называется форма травли, при которой группу намеренно настраивают против одного участника, исключают его из общих чатов и демонстративно игнорируют?",
+                options: [
+                    "Социальный остракизм (цифровой бойкот)",
+                    "Модерация контента",
+                    "Верификация профиля"
+                ],
+                correct: 0
+            },
+            {
+                q: "Почему кибербуллинг часто воспринимается тяжелее, чем конфликт в реальной жизни?",
+                options: [
+                    "В интернете нельзя заблокировать пользователя",
+                    "Атака может длиться круглосуточно (24/7), оставлять цифровой след и происходить на глазах у огромной аудитории",
+                    "В сети запрещено обращаться за помощью к взрослым"
+                ],
+                correct: 1
+            },
+            {
+                q: "Что такое гриферство (griefing) в онлайн-играх?",
+                options: [
+                    "Помощь новичкам в освоении игровой механики",
+                    "Целенаправленное вредительство другим игрокам без игровой выгоды, чтобы испортить им удовольствие от игры",
+                    "Создание собственной игровой гильдии"
+                ],
+                correct: 1
+            },
+            {
+                q: "Как должен поступить свидетель кибербуллинга, чтобы реально помочь пострадавшему?",
+                options: [
+                    "Поставить лайк смешному мему про одноклассника, чтобы не выделяться",
+                    "Не распространять оскорбительный контент, отправить жалобу на пост и поддержать жертву в личных сообщениях",
+                    "Написать в ответ ещё более жёсткие оскорбления агрессору"
+                ],
+                correct: 1
+            },
+            {
+                q: "Какой способ защиты аккаунта надёжнее всего предотвращает взлом страницы с целью дальнейшей травли от имени владельца?",
+                options: [
+                    "Использование одинакового пароля с датой рождения на всех сайтах",
+                    "Сложный уникальный пароль в сочетании с двухфакторной аутентификацией (2FA)",
+                    "Скрытие аватарки профиля"
+                ],
+                correct: 1
+            },
+            {
+                q: "Что такое кибервымогательство (сексторшн / шантаж в сети)?",
+                options: [
+                    "Угроза опубликовать личные фото или компрометирующую информацию, если жертва не выполнит требования шантажиста",
+                    "Платная подписка на закрытый канал блогера",
+                    "Официальный штраф за нарушение правил сообщества"
+                ],
+                correct: 0
+            },
+            {
+                q: "Какое главное правило нужно помнить при шантаже или угрозах в интернете?",
+                options: [
+                    "Выполнить требования шантажиста один раз, чтобы он отстал",
+                    "Никогда не платить и не отправлять новые материалы, сохранить переписку и немедленно обратиться к родителям или в полицию",
+                    "Удалить свой аккаунт без сохранения доказательств"
+                ],
+                correct: 1
+            },
+            {
+                q: "Что такое «эффект растормаживания в сети» (online disinhibition effect)?",
+                options: [
+                    "Снижение скорости интернета при большом количестве открытых вкладок",
+                    "Психологическое явление, при котором из-за анонимности и отсутствия зрительного контакта люди позволяют себе в сети куда более жестокие поступки, чем в жизни",
+                    "Ускоренное запоминание информации с экрана смартфона"
+                ],
+                correct: 1
+            }
+        ];
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        let roomCode = urlParams.get('room') || localStorage.getItem('cyber_active_room') || generateRoomId();
+
+        // Уникальный топик для синхронизации через публичный брокер ntfy.sh
+        const SYNC_PREFIX = 'kg_quiz_cyber_v2026_';
+        let resultsMap = new Map();
+        let eventSource = null;
+
+        function generateRoomId() {
+            const id = Math.floor(1000 + Math.random() * 9000).toString();
+            localStorage.setItem('cyber_active_room', id);
+            return id;
+        }
+
+        function getStorageKey() {
+            return 'cyber_results_room_' + roomCode;
+        }
+
+        function getTopicName() {
+            return SYNC_PREFIX + roomCode;
+        }
+
+        function loadLocalResults() {
+            resultsMap.clear();
+            try {
+                const raw = JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
+                raw.forEach(item => {
+                    const key = item.id || (item.name + '_' + item.score);
+                    resultsMap.set(key, item);
+                });
+            } catch (e) {}
+            renderLeaderboard();
+        }
+
+        function saveLocalResults() {
+            localStorage.setItem(getStorageKey(), JSON.stringify(Array.from(resultsMap.values())));
+        }
+
+        function getTestUrl() {
+            const baseUrl = window.location.href.split('?')[0];
+            return `${baseUrl}?mode=test&room=${roomCode}`;
+        }
+
+        function updateBoardHeader() {
+            document.getElementById('roomBadge').textContent = `🛡️ Комната #${roomCode}`;
+            const testUrl = getTestUrl();
+            document.getElementById('openHereLink').href = testUrl;
+            const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=6&data=${encodeURIComponent(testUrl)}`;
+            document.getElementById('qrImage').src = qrApi;
+        }
+
+        function connectSyncChannel() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            const topic = getTopicName();
+            // Подписываемся на поток сообщений SSE и забираем историю за последние 12 часов
+            eventSource = new EventSource(`https://ntfy.sh/${topic}/sse?since=12h`);
+            eventSource.onmessage = (event) => {
+                try {
+                    const wrapper = JSON.parse(event.data);
+                    if (!wrapper.message) return;
+                    const payload = JSON.parse(wrapper.message);
+
+                    if (payload.type === 'clear') {
+                        if (!payload.ts || payload.ts > lastClearTs) {
+                            lastClearTs = payload.ts || Date.now();
+                            resultsMap.clear();
+                            saveLocalResults();
+                            renderLeaderboard();
+                        }
+                    } else if (payload.type === 'score' && payload.name) {
+                        if (payload.ts && payload.ts < lastClearTs) return;
+                        const key = payload.id || (payload.name + '_' + payload.ts);
+                        resultsMap.set(key, {
+                            id: key,
+                            name: payload.name,
+                            score: Number(payload.score) || 0,
+                            total: Number(payload.total) || QUESTIONS.length,
+                            ts: payload.ts || Date.now()
+                        });
+                        saveLocalResults();
+                        renderLeaderboard();
+                    }
+                } catch (e) {}
+            };
+        }
+
+        let lastClearTs = 0;
+
+        function createNewRoom() {
+            roomCode = generateRoomId();
+            lastClearTs = Date.now();
+            resultsMap.clear();
+            updateBoardHeader();
+            loadLocalResults();
+            connectSyncChannel();
+        }
+
+        async function clearResults() {
+            lastClearTs = Date.now();
+            resultsMap.clear();
+            saveLocalResults();
+            renderLeaderboard();
+            try {
+                await fetch(`https://ntfy.sh/${getTopicName()}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ type: 'clear', ts: lastClearTs })
+                });
+            } catch (e) {}
+        }
+
+        function renderLeaderboard() {
+            const listEl = document.getElementById('resultsList');
+            const countEl = document.getElementById('participantsCount');
+            const items = Array.from(resultsMap.values()).sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.ts - b.ts;
+            });
+
+            countEl.textContent = `Участников: ${items.length}`;
+
+            if (items.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        Отсканируйте QR-код с телефона, введите имя и пройдите 15 вопросов — результаты сразу появятся здесь!
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = items.map((item, idx) => {
+                const percent = Math.round((item.score / item.total) * 100);
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                return `
+                    <div class="result-card">
+                        <div class="result-top">
+                            <div class="student-name">
+                                <span class="rank-badge">${medal}</span>
+                                <span>${escapeHtml(item.name)}</span>
+                            </div>
+                            <div class="score-text">${item.score}/${item.total}</div>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // Логика ученика
+        let studentName = '';
+        let currentQIndex = 0;
+        let userAnswers = new Array(QUESTIONS.length).fill(null);
+
+        function startQuiz() {
+            const input = document.getElementById('studentNameInput');
+            const val = input.value.trim();
+            if (!val) {
+                input.focus();
+                input.style.borderColor = '#f43f5e';
+                return;
+            }
+            studentName = val;
+            document.getElementById('nameStep').classList.add('hidden');
+            document.getElementById('quizStep').classList.remove('hidden');
+            document.getElementById('playerLabel').textContent = `👤 ${studentName}`;
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const qObj = QUESTIONS[currentQIndex];
+            document.getElementById('questionCounter').textContent = `❓ Вопрос ${currentQIndex + 1}/${QUESTIONS.length}`;
+            document.getElementById('questionText').textContent = qObj.q;
+
+            const letters = ['А', 'Б', 'В'];
+            const optionsContainer = document.getElementById('optionsList');
+            optionsContainer.innerHTML = qObj.options.map((opt, idx) => {
+                const isSelected = userAnswers[currentQIndex] === idx;
+                return `
+                    <button class="option-btn ${isSelected ? 'selected' : ''}" onclick="selectOption(${idx})">
+                        <span class="option-letter">${letters[idx]}</span>
+                        <span>${opt}</span>
+                    </button>
+                `;
+            }).join('');
+
+            document.getElementById('prevQBtn').disabled = currentQIndex === 0;
+            document.getElementById('prevQBtn').style.opacity = currentQIndex === 0 ? '0.4' : '1';
+
+            const nextBtn = document.getElementById('nextQBtn');
+            if (currentQIndex === QUESTIONS.length - 1) {
+                nextBtn.innerHTML = '✅ Готово';
+            } else {
+                nextBtn.innerHTML = 'Вперёд →';
+            }
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentQIndex] = idx;
+            renderQuestion();
+        }
+
+        function prevQuestion() {
+            if (currentQIndex > 0) {
+                currentQIndex--;
+                renderQuestion();
+            }
+        }
+
+        async function nextQuestion() {
+            if (userAnswers[currentQIndex] === null) {
+                alert('Выбери один из вариантов ответа (А, Б или В), чтобы продолжить.');
+                return;
+            }
+            if (currentQIndex < QUESTIONS.length - 1) {
+                currentQIndex++;
+                renderQuestion();
+            } else {
+                await finishQuiz();
+            }
+        }
+
+        async function finishQuiz() {
+            let score = 0;
+            QUESTIONS.forEach((q, idx) => {
+                if (userAnswers[idx] === q.correct) score++;
+            });
+
+            document.getElementById('quizStep').classList.add('hidden');
+            document.getElementById('finishStep').classList.remove('hidden');
+            document.getElementById('finishName').textContent = `${studentName}, тест завершён!`;
+            document.getElementById('finalScoreText').textContent = `${score} / ${QUESTIONS.length}`;
+
+            const record = {
+                type: 'score',
+                id: studentName + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                name: studentName,
+                score: score,
+                total: QUESTIONS.length,
+                ts: Date.now()
+            };
+
+            // Сохраняем локально на случай работы в одном браузере
+            const existing = JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
+            existing.push(record);
+            localStorage.setItem(getStorageKey(), JSON.stringify(existing));
+
+            // Отправляем на доску по публичному каналу синхронизации
+            try {
+                await fetch(`https://ntfy.sh/${getTopicName()}`, {
+                    method: 'POST',
+                    body: JSON.stringify(record)
+                });
+            } catch (e) {}
+        }
+
+        // Инициализация
+        if (mode === 'test') {
+            document.getElementById('boardView').classList.add('hidden');
+            document.getElementById('studentView').classList.remove('hidden');
+        } else {
+            updateBoardHeader();
+            loadLocalResults();
+            connectSyncChannel();
+            window.addEventListener('storage', (e) => {
+                if (e.key === getStorageKey()) {
+                    loadLocalResults();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
